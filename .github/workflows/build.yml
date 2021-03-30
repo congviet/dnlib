@@ -1,5 +1,25 @@
 name: GitHub CI
-on: push
+on:
+  push:
+    paths:
+      - '.github/workflows/**'
+      - 'Examples/**'
+      - 'src/**'
+      - '!**/*.md'
+    branches:
+      - master
+  pull_request:
+    paths:
+      - 'Examples/**'
+      - 'src/**'
+      - '!**/*.md'
+    branches:
+      - master
+  release:
+    types: released
+
+env:
+  CI_REQ_DOTNET_SDK_VER: 5.0.100
 
 jobs:
   build-windows:
@@ -7,7 +27,11 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{env.CI_REQ_DOTNET_SDK_VER}}
 
       - name: Build
         shell: pwsh
@@ -17,15 +41,18 @@ jobs:
           .\build.ps1
 
       - name: upload-artifact doesn't support wildcards
+        if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
         shell: pwsh
         run: |
           New-Item -ItemType Directory nuget_files > $null
           Copy-Item src\bin\Release\*.*nupkg nuget_files
 
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v2
+        if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
         with:
           name: nupkg
           path: nuget_files
+          if-no-files-found: error
 
       - name: Upload to nuget.org if it's a new release
         if: startsWith(github.ref, 'refs/tags/')
@@ -40,7 +67,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{env.CI_REQ_DOTNET_SDK_VER}}
 
       - name: Build
         shell: pwsh

@@ -68,7 +68,7 @@ namespace dnlib.DotNet {
 				if (reader.reader.Length == 0)
 					return null;
 				var csig = reader.ReadSig();
-				if (!(csig is null))
+				if (csig is not null)
 					csig.ExtraData = reader.GetExtraData();
 				return csig;
 			}
@@ -430,6 +430,7 @@ namespace dnlib.DotNet {
 			case CallingConvention.FastCall:
 			case CallingConvention.VarArg:
 			case CallingConvention.NativeVarArg:
+			case CallingConvention.Unmanaged:
 				result = ReadMethod(callingConvention);
 				break;
 
@@ -449,7 +450,6 @@ namespace dnlib.DotNet {
 				result = ReadGenericInstMethod(callingConvention);
 				break;
 
-			case CallingConvention.Unmanaged:
 			default:
 				result = null;
 				break;
